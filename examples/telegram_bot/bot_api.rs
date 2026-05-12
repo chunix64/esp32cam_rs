@@ -134,7 +134,7 @@ pub fn telegram_post_multipart(
     }
 }
 
-use frankenstein::ErrorResponse;
+use frankenstein::response::ErrorResponse;
 use frankenstein::TelegramApi;
 use std::path::PathBuf;
 use thiserror::Error;

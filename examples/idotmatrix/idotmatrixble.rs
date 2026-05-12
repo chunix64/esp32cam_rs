@@ -72,7 +72,7 @@ impl<'a> IDMBle<'a> {
 
 pub async fn idotmatrix_stream_task(camera: Camera<'_>) -> Result<()> {
     let ble_device = BLEDevice::take();
-    let mut ble_client = BLEClient::new();
+    let mut ble_client = ble_device.new_client();
 
     let mut ble_handler = IDMBle::new(ble_device, &mut ble_client).await.unwrap();
 

@@ -10,7 +10,8 @@ use esp_idf_svc::{
 use esp_idf_sys::esp_restart;
 use espcam::{config::get_config, espcam::Camera, wifi_handler::my_wifi};
 use frankenstein::{
-    ForwardMessageParams, GetUpdatesParams, SendChatActionParams, SendMessageParams, TelegramApi,
+    methods::{GetUpdatesParams, SendChatActionParams, SendMessageParams},
+    TelegramApi,
 };
 use log::{error, info};
 
@@ -173,7 +174,7 @@ fn main() -> Result<()> {
         for update in updates.result {
             offset = update.update_id as i64 + 1;
 
-            if let frankenstein::UpdateContent::Message(message) = update.content {
+            if let frankenstein::updates::UpdateContent::Message(message) = update.content {
                 info!(
                     "message id {} from chat {}",
                     message.message_id, message.chat.id
@@ -188,7 +189,7 @@ fn main() -> Result<()> {
                         api.send_chat_action(
                             &SendChatActionParams::builder()
                                 .chat_id(message.chat.id)
-                                .action(frankenstein::ChatAction::UploadPhoto)
+                                .action(frankenstein::types::ChatAction::UploadPhoto)
                                 .build(),
                         )
                         .ok();
@@ -233,6 +234,11 @@ fn main() -> Result<()> {
                             api.send_message(
                                 &SendMessageParams::builder()
                                     .chat_id(message.chat.id)
+                                    .reply_parameters(
+                                        frankenstein::types::ReplyParameters::builder()
+                                            .message_id(message.message_id)
+                                            .build(),
+                                    )
                                     .text("Flash disabled!")
                                     .build(),
                             )
@@ -243,6 +249,12 @@ fn main() -> Result<()> {
                             api.send_message(
                                 &SendMessageParams::builder()
                                     .chat_id(message.chat.id)
+                                    .reply_parameters(
+                                        frankenstein::types::ReplyParameters::builder()
+                                            .message_id(message.message_id)
+                                            .build(),
+                                    )
+                                    .message_thread_id(message.message_id)
                                     .text("Flash enabled!")
                                     .build(),
                             )
@@ -260,6 +272,11 @@ fn main() -> Result<()> {
                             api.send_message(
                                 &SendMessageParams::builder()
                                     .chat_id(message.chat.id)
+                                    .reply_parameters(
+                                        frankenstein::types::ReplyParameters::builder()
+                                            .message_id(message.message_id)
+                                            .build(),
+                                    )
                                     .text("Public use disabled!")
                                     .build(),
                             )
@@ -270,6 +287,7 @@ fn main() -> Result<()> {
                             api.send_message(
                                 &SendMessageParams::builder()
                                     .chat_id(message.chat.id)
+                                    .message_thread_id(message.message_id)
                                     .text("Public use enabled!")
                                     .build(),
                             )
@@ -280,6 +298,11 @@ fn main() -> Result<()> {
                         api.send_message(
                             &SendMessageParams::builder()
                                 .chat_id(message.chat.id)
+                                .reply_parameters(
+                                        frankenstein::types::ReplyParameters::builder()
+                                            .message_id(message.message_id)
+                                            .build(),
+                                    )
                                 .text("Hello!\nUse /photo to take a photo!\nUse /flash to toggle flash!")
                                 .build(),
                         )
@@ -290,17 +313,6 @@ fn main() -> Result<()> {
                         }
                     }
                     _ => {}
-                }
-
-                if message.chat.type_field == frankenstein::ChatType::Private {
-                    api.forward_message(
-                        &ForwardMessageParams::builder()
-                            .chat_id(bot_state.owner_id)
-                            .from_chat_id(message.chat.id)
-                            .message_id(message.message_id)
-                            .build(),
-                    )
-                    .ok();
                 }
             }
         }

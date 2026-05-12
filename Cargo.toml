@@ -4,7 +4,11 @@ version = "0.1.0"
 authors = ["Kezi <keziolio123@gmail.com>"]
 edition = "2021"
 resolver = "2"
-rust-version = "1.71"
+rust-version = "1.82"
+
+[[bin]]
+name = "espcam"
+harness = false # do not use the built-in cargo test harness -> resolve rust-analyzer errors
 
 [profile.release]
 opt-level = 2
@@ -15,36 +19,36 @@ debug = true    # Symbols are nice and they don't increase the size on Flash
 opt-level = "z"
 
 [features]
-default = ["std", "embassy", "esp-idf-svc/native"]
+default = ["std", "esp-idf-svc/native"]
 
 pio = ["esp-idf-svc/pio"]
 std = ["alloc", "esp-idf-svc/binstart", "esp-idf-svc/std"]
 alloc = ["esp-idf-svc/alloc"]
 nightly = ["esp-idf-svc/nightly"]
 experimental = ["esp-idf-svc/experimental"]
-embassy = ["esp-idf-svc/embassy-sync", "esp-idf-svc/critical-section", "esp-idf-svc/embassy-time-driver"]
+# embassy = ["esp-idf-svc/critical-section", "esp-idf-svc/embassy-time-driver"]
 
 [dependencies]
 log = { version = "0.4", default-features = false }
-esp-idf-svc = { version = "0.49" , default-features = false }
-embedded-svc = "0.28"
-anyhow = "1.0.79"
+esp-idf-svc = { version = "0.52.1" , default-features = false }
+embedded-svc = "0.29"
+anyhow = "1.0.102"
 
-bstr = { version = "1.8.0", default-features = false }
-esp32-nimble = "0.8.2"
+bstr = { version = "1.12.1", default-features = false }
+esp32-nimble = "0.12.0"
 tokio = { version = "*", features = ["rt", "time", "sync","macros"] }
-lazy_static = "1.4.0"
-uuid = { version = "1.2.2", default-features = false, features = ["macro-diagnostics"] }
+lazy_static = "1.5.0"
+uuid = { version = "1.20.0", default-features = false, features = ["macro-diagnostics"] }
 rgb565 = "0.1.3"
 image = { version = "0.25", default-features = false, features = ["png"] }
-frankenstein = { version = "0.37", default-features = false, features = ["telegram-trait"]}
+frankenstein = { version = "0.49", default-features = false, features = ["trait-sync"]}
 serde = { version = "1", features = ["derive"]}
 serde_json = { version = "1"}
 
 idotmatrix = {git = "https://github.com/Kezii/idotmatrix.git"}
-esp-idf-hal = "0.44"
-esp-idf-sys = "0.35"
-thiserror = "2.0.6"
+esp-idf-hal = "0.46.2"
+esp-idf-sys = "0.37.2"
+thiserror = "2.0.18"
 
 [[package.metadata.esp-idf-sys.extra_components]]
 component_dirs = "components/esp32-camera"
@@ -53,4 +57,4 @@ bindings_module = "camera"
 
 
 [build-dependencies]
-embuild = "0.32"
+embuild = { version = "0.33", features = ["espidf"] }
