@@ -59,6 +59,7 @@ pub fn telegram_post_multipart(
     url: impl AsRef<str>,
     data: &[u8],
     chat_id: i64,
+    caption: Option<String>,
 ) -> Result<Vec<u8>, EspBotError> {
     // 1. Create a new EspHttpConnection with default Configuration. (Check documentation)
     let config = Configuration::default();
@@ -71,7 +72,14 @@ pub fn telegram_post_multipart(
 
     let boundary = "esp32esp32esp32";
 
-    let head = format!("--{boundary}\r\nContent-Disposition: form-data; name=\"chat_id\"; \r\n\r\n{chat_id}\r\n--{boundary}\r\nContent-Disposition: form-data; name=\"photo\"; filename=\"esp32-cam.jpg\"\r\nContent-Type: image/jpeg\r\n\r\n");
+    let mut head = String::new();
+    push_multipart_text_field(&mut head, boundary, "chat_id", &chat_id);
+
+    if let Some(caption) = caption.as_deref() {
+        push_multipart_text_field(&mut head, boundary, "caption", caption);
+    }
+
+    push_multipart_file_header(&mut head, boundary, "photo", "esp32-cam.jpg", "image/jpeg");
     let tail = format!("\r\n--{boundary}--\r\n");
 
     let datalen = head.len() + data.len() + tail.len();
@@ -132,6 +140,34 @@ pub fn telegram_post_multipart(
             }))
         }
     }
+}
+
+fn push_multipart_text_field(body: &mut String, boundary: &str, name: &str, value: &str) {
+    body.push_str("--");
+    body.push_str(boundary);
+    body.push_str("\r\nContent-Disposition: form-data; name=\"");
+    body.push_str(name);
+    body.push_str("\"\r\n\r\n");
+    body.push_str(value);
+    body.push_str("\r\n");
+}
+
+fn push_multipart_file_header(
+    body: &mut String,
+    boundary: &str,
+    name: &str,
+    filename: &str,
+    content_type: &str,
+) {
+    body.push_str("--");
+    body.push_str(boundary);
+    body.push_str("\r\nContent-Disposition: form-data; name=\"");
+    body.push_str(name);
+    body.push_str("\"; filename=\"");
+    body.push_str(filename);
+    body.push_str("\"\r\nContent-Type: ");
+    body.push_str(content_type);
+    body.push_str("\r\n\r\n");
 }
 
 use frankenstein::response::ErrorResponse;

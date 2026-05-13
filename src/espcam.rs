@@ -221,6 +221,40 @@ pub struct Camera<'a> {
 }
 
 impl<'a> Camera<'a> {
+    pub fn apply_low_noise_profile(&self) {
+        let sensor = unsafe { camera::esp_camera_sensor_get() };
+        if sensor.is_null() {
+            return;
+        }
+
+        unsafe {
+            // A slower sensor clock lowers EMI and lets auto exposure favor longer
+            // integration over analog gain, which keeps JPEG size stable but cleaner.
+            if let Some(set_xclk) = (*sensor).set_xclk {
+                let _ = set_xclk(sensor, esp_idf_sys::ledc_timer_t_LEDC_TIMER_0 as i32, 10);
+            }
+
+            if let Some(set_gainceiling) = (*sensor).set_gainceiling {
+                let _ = set_gainceiling(sensor, 0 as camera::gainceiling_t);
+            }
+            if let Some(set_aec2) = (*sensor).set_aec2 {
+                let _ = set_aec2(sensor, 1);
+            }
+            if let Some(set_bpc) = (*sensor).set_bpc {
+                let _ = set_bpc(sensor, 1);
+            }
+            if let Some(set_wpc) = (*sensor).set_wpc {
+                let _ = set_wpc(sensor, 1);
+            }
+            if let Some(set_raw_gma) = (*sensor).set_raw_gma {
+                let _ = set_raw_gma(sensor, 1);
+            }
+            if let Some(set_lenc) = (*sensor).set_lenc {
+                let _ = set_lenc(sensor, 1);
+            }
+        }
+    }
+
     pub fn new(
         pin_pwdn: impl InputPin + OutputPin + 'a,
         pin_xclk: impl InputPin + OutputPin + 'a,

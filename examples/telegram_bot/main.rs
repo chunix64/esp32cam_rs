@@ -71,7 +71,7 @@ fn main() -> Result<()> {
     std::thread::sleep(std::time::Duration::from_millis(1));
     flash_led.set_low().unwrap();
 
-    let camera = Camera::new(
+    let mut camera = Camera::new(
         peripherals.pins.gpio32,
         peripherals.pins.gpio0,
         peripherals.pins.gpio5,
@@ -91,6 +91,8 @@ fn main() -> Result<()> {
         esp_idf_sys::camera::framesize_t_FRAMESIZE_UXGA,
     )
     .unwrap();
+
+    camera.apply_low_noise_profile();
 
     let camera = std::sync::Arc::new(camera);
 
@@ -204,6 +206,11 @@ fn main() -> Result<()> {
                         flash_led.set_low().unwrap();
 
                         if let Some(framebuffer) = framebuffer {
+                            let file_size = framebuffer.data().len();
+                            let file_size_kb = file_size as f64 / 1024.0;
+
+                            let caption = format!("File size: {:.2} KB", file_size_kb);
+
                             let res = telegram_post_multipart(
                                 format!(
                                     "https://api.telegram.org/bot{}/sendPhoto",
@@ -211,6 +218,7 @@ fn main() -> Result<()> {
                                 ),
                                 framebuffer.data(),
                                 message.chat.id,
+                                Some(caption),
                             );
 
                             match res {
